@@ -43,34 +43,29 @@ namespace EmployeeViews {
 			return ( 
 					<div>	
 
-					<Employees data={this.state.db.employees}
+					<List data={this.state.db.employees}
 						edit={(item: Models.Employee) => { this.setState({ selectedEmployee: item}); }} />
 
 					{ this.state.selectedEmployee ? 
-						<EditItem item={this.state.selectedEmployee as any}>
-						
-					<li data-role="fieldcontain">
-					</li>
-						</EditItem>
+						<Edit item={this.state.selectedEmployee as any}>
+						</Edit>
 					: null }
-					
 
-
-				</div>
+					</div>
 			       );
 		}
 	}
 
 
-	interface EmployeesProps {
+	interface ListProps {
 		data: {[key: string]: Models.Employee}; 
 		edit: (obj: Models.Employee) => void;
 	}
-	interface EmployeesState {
+	interface ListState {
 		newItem: string;
 	}
-	export class Employees extends BaseViews.SyncView<EmployeesProps, EmployeesState> {
-		constructor(props: EmployeesProps) {
+	export class List extends BaseViews.SyncView<ListProps, ListState> {
+		constructor(props: ListProps) {
 			super(props);
 			this.state = { newItem: '' };
 		}
@@ -152,23 +147,22 @@ namespace EmployeeViews {
 
 
 
-	interface EditItemProps<T extends SyncNode.ISyncNode> {
-		item: T; 
-		children?: any;
+	interface EditProps {
+		item: Models.Employee;
 	}
-	interface EditItemState<T extends SyncNode.ISyncNode> {
-		mutable: T;
+	interface EditState {
+		mutable: Models.Employee;
 	}
-	export class EditItem<T extends SyncNode.ISyncNode> extends BaseViews.SyncView<EditItemProps<T>, EditItemState<T>> {
-		constructor(props: EditItemProps<T>) {
+	export class Edit extends BaseViews.SyncView<EditProps, EditState> {
+		constructor(props: EditProps) {
 			super(props);
 			this.state = this.getMutableState(props.item);
 		}
-		componentWillReceiveProps(nextProps: EditItemProps<T>) {
+		componentWillReceiveProps(nextProps: EditProps) {
 			console.log('nextProps', nextProps);
 			this.setState(this.getMutableState(nextProps.item));
 		}
-		getMutableState(immutable: T) {
+		getMutableState(immutable: Models.Employee) {
 			return { mutable: JSON.parse(JSON.stringify(immutable)) };
 		}
 		saveField(propName: string, e: React.FocusEvent) {
@@ -192,8 +186,7 @@ namespace EmployeeViews {
 					</div>
 					<div role="main" className="ui-content">
 					<ul data-role="listview" ref="listview">	
-						<li>Here!</li>
-						{ this.props.children }
+						<li>Hereeeeeee!</li>
 					</ul>
 					</div>
 					</div>

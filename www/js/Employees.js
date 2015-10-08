@@ -37,24 +37,24 @@ var EmployeeViews;
         };
         Main.prototype.render = function () {
             var _this = this;
-            return (React.createElement("div", null, React.createElement(Employees, {"data": this.state.db.employees, "edit": function (item) { _this.setState({ selectedEmployee: item }); }}), this.state.selectedEmployee ?
-                React.createElement(EditItem, {"item": this.state.selectedEmployee}, React.createElement("li", {"data-role": "fieldcontain"}))
+            return (React.createElement("div", null, React.createElement(List, {"data": this.state.db.employees, "edit": function (item) { _this.setState({ selectedEmployee: item }); }}), this.state.selectedEmployee ?
+                React.createElement(Edit, {"item": this.state.selectedEmployee})
                 : null));
         };
         return Main;
     })(React.Component);
     EmployeeViews.Main = Main;
-    var Employees = (function (_super) {
-        __extends(Employees, _super);
-        function Employees(props) {
+    var List = (function (_super) {
+        __extends(List, _super);
+        function List(props) {
             _super.call(this, props);
             this.state = { newItem: '' };
         }
-        Employees.prototype.componentDidUpdate = function () {
+        List.prototype.componentDidUpdate = function () {
             var domNode = React.findDOMNode(this.refs['listview']);
             $(domNode)['listview']('refresh');
         };
-        Employees.prototype.handleKeyUp = function (element, e) {
+        List.prototype.handleKeyUp = function (element, e) {
             if (e.keyCode === 13) {
                 var item = {
                     key: new Date().toISOString(),
@@ -66,10 +66,10 @@ var EmployeeViews;
                 this.setState({ newItem: '' });
             }
         };
-        Employees.prototype.handleTextChanged = function (e) {
+        List.prototype.handleTextChanged = function (e) {
             this.setState({ newItem: e.target.value });
         };
-        Employees.prototype.addNew = function () {
+        List.prototype.addNew = function () {
             var obj = {
                 key: new Date().toISOString(),
                 name: 'New Employee',
@@ -78,7 +78,7 @@ var EmployeeViews;
             };
             this.props.data.set(obj.key, obj);
         };
-        Employees.prototype.render = function () {
+        List.prototype.render = function () {
             var _this = this;
             console.log('render list');
             var nodes = Utils.toArray(this.props.data, 'name').map(function (obj) {
@@ -92,39 +92,39 @@ var EmployeeViews;
                 }
             }})), nodes)), React.createElement("div", {"data-role": "footer"}, React.createElement("h4", null, "-"))));
         };
-        return Employees;
+        return List;
     })(BaseViews.SyncView);
-    EmployeeViews.Employees = Employees;
-    var EditItem = (function (_super) {
-        __extends(EditItem, _super);
-        function EditItem(props) {
+    EmployeeViews.List = List;
+    var Edit = (function (_super) {
+        __extends(Edit, _super);
+        function Edit(props) {
             _super.call(this, props);
             this.state = this.getMutableState(props.item);
         }
-        EditItem.prototype.componentWillReceiveProps = function (nextProps) {
+        Edit.prototype.componentWillReceiveProps = function (nextProps) {
             console.log('nextProps', nextProps);
             this.setState(this.getMutableState(nextProps.item));
         };
-        EditItem.prototype.getMutableState = function (immutable) {
+        Edit.prototype.getMutableState = function (immutable) {
             return { mutable: JSON.parse(JSON.stringify(immutable)) };
         };
-        EditItem.prototype.saveField = function (propName, e) {
+        Edit.prototype.saveField = function (propName, e) {
             this.props.item.set(propName, e.target.value);
         };
-        EditItem.prototype.componentDidUpdate = function () {
+        Edit.prototype.componentDidUpdate = function () {
             var domNode = React.findDOMNode(this.refs['listview']);
             $(domNode)['listview']('refresh');
         };
-        EditItem.prototype.remove = function () {
+        Edit.prototype.remove = function () {
             this.props.item.parent.remove(this.props.item.key);
             window.history.back();
         };
-        EditItem.prototype.render = function () {
-            return (React.createElement("div", {"data-role": "page", "id": "edit", "ref": "editpage"}, React.createElement("div", {"data-role": "header"}, React.createElement("a", {"href": "#", "data-rel": "back", "data-direction": "reverse", "className": "ui-btn-left ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-left ui-icon-back"}, "Back"), React.createElement("h4", null, "Edit"), React.createElement("button", {"onClick": this.remove.bind(this), "className": "ui-btn-right ui-btn ui-btn-b ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-delete"}, "Delete")), React.createElement("div", {"role": "main", "className": "ui-content"}, React.createElement("ul", {"data-role": "listview", "ref": "listview"}, React.createElement("li", null, "Here!"), this.props.children))));
+        Edit.prototype.render = function () {
+            return (React.createElement("div", {"data-role": "page", "id": "edit", "ref": "editpage"}, React.createElement("div", {"data-role": "header"}, React.createElement("a", {"href": "#", "data-rel": "back", "data-direction": "reverse", "className": "ui-btn-left ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-left ui-icon-back"}, "Back"), React.createElement("h4", null, "Edit"), React.createElement("button", {"onClick": this.remove.bind(this), "className": "ui-btn-right ui-btn ui-btn-b ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-delete"}, "Delete")), React.createElement("div", {"role": "main", "className": "ui-content"}, React.createElement("ul", {"data-role": "listview", "ref": "listview"}, React.createElement("li", null, "Hereeeeeee!")))));
         };
-        return EditItem;
+        return Edit;
     })(BaseViews.SyncView);
-    EmployeeViews.EditItem = EditItem;
+    EmployeeViews.Edit = Edit;
 })(EmployeeViews || (EmployeeViews = {}));
 $(document).bind("mobileinit", function () {
     // $.mobile.defaultPageTransition = 'slide';

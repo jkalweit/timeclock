@@ -11,13 +11,66 @@
 namespace ShiftViews {
 
 
-	interface ShiftsProps {
-		shifts: {[key: string]: Models.Shift}; 
+
+
+
+	interface MainState {
+		db?: Models.Db;
+		selectedShift?: Models.Shift;
+	}
+	export class Main extends React.Component<{}, MainState> {
+		constructor(props: {}) {
+			super(props);
+
+			var data: Models.Db = { employees: {},  shifts: {} };
+
+			document.addEventListener('deviceready', () => {
+				console.log('	deviceready 4');
+				var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://localhost:1337');
+				//var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://timeclocker.azurewebsites.net');
+				sync.onUpdated((updated: Models.Db) => {
+					console.log('updated data!', updated);
+					var newState: MainState = { db: updated };
+					if(this.state.selectedShift) newState.selectedShift = updated.shifts[this.state.selectedShift.key];
+					this.setState(newState);
+				});
+
+			});
+			this.state = { db: data, selectedShift: null };
+		}
+		edit(shift: Models.Shift) {
+			this.setState({ selectedShift: shift });
+		}
+		render() {
+			
+			return ( 
+					<div>	
+
+
+					<List data={this.state.db.shifts} edit={this.edit.bind(this)} />
+
+
+					{ this.state.selectedShift ? 
+						<Edit item={this.state.selectedShift} employees={this.state.db.employees} />
+					: null }
+					
+
+				</div>
+			       );
+		}
+	}
+
+
+
+
+
+	interface ListProps {
+		data: {[key: string]: Models.Shift}; 
 		edit: (shift: Models.Shift) => void;
 	}
-	interface ShiftsState {
+	interface ListState {
 	}
-	export class Shifts extends BaseViews.SyncView<ShiftsProps, ShiftsState> {
+	export class List extends BaseViews.SyncView<ListProps, ListState> {
 		componentDidUpdate() {
 			var domNode = React.findDOMNode(this.refs['listview']);
 			$(domNode)['listview']('refresh');
@@ -36,8 +89,8 @@ namespace ShiftViews {
 		handleTextChanged(e: React.KeyboardEvent) {
 			//this.setState({ newList: (e.target as any).value });
 		}
-		addShift() {
-			var shift: Models.Shift = {
+		add() {
+			var item: Models.Shift = {
 			key: new Date().toISOString(),
 			name: 'OPEN',
 			day: 'Tuesday',
@@ -45,13 +98,13 @@ namespace ShiftViews {
 			end: '10pm',
 			note: ''
 			};
-			(this.props.shifts as SyncNode.ISyncNode).set(shift.key, shift);
+			(this.props.data as SyncNode.ISyncNode).set(item.key, item);
 		}
 		render() {
 
 			console.log('render list');
 
-			var shifts = Utils.toArray(this.props.shifts); 
+			var shifts = Utils.toArray(this.props.data); 
 			var dayNames =  ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 			var days = Utils.group(shifts, 'day', dayNames);
 
@@ -79,11 +132,11 @@ namespace ShiftViews {
 			return ( 
 					<div data-role="page" id="list" ref="listpage">
 					<div data-role="header">
-					<h4>Shifts</h4>
+					<h4>List</h4>
 					</div>
 					<div role="main" className="ui-content">
 					<ul data-role="listview" ref="listview">
-					<li><button onClick={this.addShift.bind(this)}>Add Shift</button></li>
+					<li><button onClick={this.add.bind(this)}>Add Shift</button></li>
 					{ nodes }
 					</ul>
 					</div>
@@ -94,34 +147,34 @@ namespace ShiftViews {
 	}
 
 
-	interface EditShiftProps {
-		shift: Models.Shift; 
+	interface EditProps {
+		item: Models.Shift; 
 		employees: {[key: string]: Models.Employee};
 	}
-	interface EditShiftState {
+	interface EditState {
 		mutable: Models.Shift;
 	}
-	export class EditShift extends BaseViews.SyncView<EditShiftProps, EditShiftState> {
-		constructor(props: EditShiftProps) {
+	export class Edit extends BaseViews.SyncView<EditProps, EditState> {
+		constructor(props: EditProps) {
 			super(props);
-			this.state = this.getMutableState(props.shift);
+			this.state = this.getMutableState(props.item);
 		}
-		componentWillReceiveProps(nextProps: EditShiftProps) {
+		componentWillReceiveProps(nextProps: EditProps) {
 			console.log('nextProps', nextProps);
-			this.setState(this.getMutableState(nextProps.shift));
+			this.setState(this.getMutableState(nextProps.item));
 		}
 		getMutableState(immutable: Models.Shift) {
 			return { mutable: JSON.parse(JSON.stringify(immutable)) };
 		}
 		saveField(propName: string, e: React.FocusEvent) {
-			this.props.shift.set(propName, (e.target as HTMLInputElement).value);	
+			this.props.item.set(propName, (e.target as HTMLInputElement).value);	
 		}
 		componentDidUpdate() {
 			var domNode = React.findDOMNode(this.refs['listview']);
 			$(domNode)['listview']('refresh');
 		}
 		remove() {
-			this.props.shift.parent.remove(this.props.shift.key);
+			this.props.item.parent.remove(this.props.item.key);
 			window.history.back();
 		}
 		render() {
@@ -173,53 +226,6 @@ namespace ShiftViews {
 
 
 
-
-	interface MainState {
-		db?: Models.Db;
-		selectedShift?: Models.Shift;
-		selectedEmployee?: Models.Employee;
-	}
-	export class Main extends React.Component<{}, MainState> {
-		constructor(props: {}) {
-			super(props);
-
-			var data: Models.Db = { employees: {},  shifts: {} };
-
-			document.addEventListener('deviceready', () => {
-				console.log('	deviceready 4');
-				var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://localhost:1337');
-				//var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://timeclocker.azurewebsites.net');
-				sync.onUpdated((updated: Models.Db) => {
-					console.log('updated data!', updated);
-					var newState: MainState = { db: updated };
-					if(this.state.selectedShift) newState.selectedShift = updated.shifts[this.state.selectedShift.key];
-					this.setState(newState);
-				});
-
-			});
-			this.state = { db: data, selectedShift: null };
-		}
-		edit(shift: Models.Shift) {
-			this.setState({ selectedShift: shift });
-		}
-		render() {
-			
-			return ( 
-					<div>	
-
-
-					<Shifts shifts={this.state.db.shifts} edit={this.edit.bind(this)} />
-
-
-					{ this.state.selectedShift ? 
-						<EditShift shift={this.state.selectedShift} employees={this.state.db.employees} />
-					: null }
-					
-
-				</div>
-			       );
-		}
-	}
 }
 
 
