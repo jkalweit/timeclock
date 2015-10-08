@@ -3,37 +3,12 @@
 /// <reference path="./SyncNode.ts" />
 /// <reference path="./SyncNodeSocket.ts" />
 /// <reference path="./BaseViews.tsx" />
+/// <reference path="./Models.ts" />
 
 "use strict"
 
-namespace Models {
 
-	export interface Db extends SyncNode.ISyncNode {
-		employees: {[key: string]: Employee};
-		//weeks: {[key: string]: Week};
-		shifts: {[key: string]: Shift};
-	}
-	export interface Employee extends SyncNode.ISyncNode {
-		key: string;
-		name: string;
-		phone: string;
-	}
-	export interface Week extends SyncNode.ISyncNode {
-		key: string;
-		shifts: {[key: string]: Shift};
-	}
-	export interface Shift extends SyncNode.ISyncNode {
-		key: string;
-		name: string;
-		day: string;
-		start: string;
-		end: string;
-		note: string;
-	}
-
-}
-
-namespace Views {
+namespace ShiftViews {
 
 
 	interface ShiftsProps {
@@ -64,11 +39,11 @@ namespace Views {
 		addShift() {
 			var shift: Models.Shift = {
 			key: new Date().toISOString(),
-			name: 'Daryl',
+			name: 'OPEN',
 			day: 'Tuesday',
 			start: '4pm',
 			end: '10pm',
-			note: 'A note.'
+			note: ''
 			};
 			(this.props.shifts as SyncNode.ISyncNode).set(shift.key, shift);
 		}
@@ -121,6 +96,7 @@ namespace Views {
 
 	interface EditShiftProps {
 		shift: Models.Shift; 
+		employees: {[key: string]: Models.Employee};
 	}
 	interface EditShiftState {
 		mutable: Models.Shift;
@@ -150,6 +126,11 @@ namespace Views {
 		}
 		render() {
 			var mutable: Models.Shift = (this.state.mutable || {}) as Models.Shift
+			
+			var names = Utils.toArray(this.props.employees, 'name').map((employee: Models.Employee) => {
+				return ( <option key={employee.key}>{employee.name}</option> );
+			});
+			
 			return ( 
 					<div data-role="page" id="edit" ref="editpage">
 					<div data-role="header">
@@ -172,7 +153,10 @@ namespace Views {
 					</label>
 					</li>
 					<li data-role="fieldcontain">
-					<label>Name: <input type="text" onBlur={this.saveField.bind(this, 'name')} value={mutable.name} onChange={this.handleChange.bind(this, 'mutable', 'name')} /></label>
+					<label>Name: <select onBlur={this.saveField.bind(this, 'name')} value={mutable.name} onChange={this.handleChange.bind(this, 'mutable', 'name')}>
+						<option>OPEN</option>
+						{ names }
+					</select></label>
 					</li>
 					<li data-role="fieldcontain">
 					<label>Start: <input type="text" onBlur={this.saveField.bind(this, 'start')} value={mutable.start} onChange={this.handleChange.bind(this, 'mutable', 'start')} /></label>
@@ -193,6 +177,7 @@ namespace Views {
 	interface MainState {
 		db?: Models.Db;
 		selectedShift?: Models.Shift;
+		selectedEmployee?: Models.Employee;
 	}
 	export class Main extends React.Component<{}, MainState> {
 		constructor(props: {}) {
@@ -203,6 +188,7 @@ namespace Views {
 			document.addEventListener('deviceready', () => {
 				console.log('	deviceready 4');
 				var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://localhost:1337');
+				//var sync = new SyncNodeSocket.SyncNodeSocket('shifts', data, 'http://timeclocker.azurewebsites.net');
 				sync.onUpdated((updated: Models.Db) => {
 					console.log('updated data!', updated);
 					var newState: MainState = { db: updated };
@@ -217,14 +203,18 @@ namespace Views {
 			this.setState({ selectedShift: shift });
 		}
 		render() {
+			
 			return ( 
 					<div>	
 
+
 					<Shifts shifts={this.state.db.shifts} edit={this.edit.bind(this)} />
 
+
 					{ this.state.selectedShift ? 
-						<EditShift shift={this.state.selectedShift} />
-				: null }
+						<EditShift shift={this.state.selectedShift} employees={this.state.db.employees} />
+					: null }
+					
 
 				</div>
 			       );
@@ -242,5 +232,5 @@ $(document).ready(() => {
 	// document.addEventListener('deviceready', () => {
 	console.log('documentready');
 	React.initializeTouchEvents(true);
-	React.render(React.createElement(Views.Main, null), document.body);
+	React.render(React.createElement(ShiftViews.Main, null), document.body);
 });

@@ -12,6 +12,8 @@
 		"SyncNodeSocket.ts",
 		"Utils.ts",
 		"BaseViews.tsx",
-		"Views.tsx"
+		"Models.ts",
+		"Employees.tsx",
+		"Shifts.tsx"
 		]
 }
